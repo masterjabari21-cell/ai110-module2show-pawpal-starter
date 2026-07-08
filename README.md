@@ -42,6 +42,17 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
+## ✨ Features
+
+- **Priority-first scheduling** — `Scheduler.build_plan()` sorts all pending tasks high → medium → low, then fills the owner's time budget greedily so critical care (meds, feeding) is never crowded out.
+- **Time-of-day sorting** — `Scheduler.sort_by_time()` orders tasks chronologically by their `HH:MM` start time; untimed tasks sort last.
+- **Flexible filtering** — `Scheduler.filter_tasks()` slices the task list by pet name, completion status, or both; the Streamlit UI exposes this as live filter controls.
+- **Conflict warnings** — `Scheduler.detect_conflicts()` catches overlapping start-time windows (e.g. a vet call booked during a training session) and returns human-readable warnings instead of crashing; the UI shows them as ⚠️ banners with a suggested fix.
+- **Daily/weekly recurrence** — `Scheduler.reschedule_recurring()` marks a task done and automatically creates the next occurrence (`today + 1 day` or `+ 7 days`); "as-needed" tasks stay one-off. Clicking **Done** in the UI triggers this.
+- **Explainable plans** — `Scheduler.explain_plan()` produces a plain-language schedule with time slots, priorities, and a count of tasks skipped for lack of time.
+- **Input validation** — invalid priority or frequency values raise a `ValueError` at task creation, so bad data can't silently corrupt the schedule.
+- **Persistent session** — the Streamlit UI stores the `Owner` object in `st.session_state`, so pets and tasks survive page re-runs.
+
 ## 🖥️ Sample Output
 
 Run `python main.py` to generate a daily schedule from the demo data:
@@ -125,12 +136,44 @@ tests/test_pawpal.py::test_owner_with_no_pets_produces_empty_plan PASSED [100%]
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+Launch the app with `streamlit run app.py`, then follow this workflow:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. **Set up the owner** — Enter your name and how many minutes you have available today (e.g. 90), then click **Set owner**. A green banner confirms your time budget; this object persists in `st.session_state` for the whole session.
+2. **Add pets** — Expand **➕ Add a new pet**, enter a name, species, age, and optional special needs. Each pet appears in a summary table showing its task counts. Add a second pet to see multi-pet scheduling.
+3. **Add tasks** — Expand **➕ Add a new task**, pick which pet it's for, and set the title, duration, priority, category (each gets an icon: 🚶 exercise, 💊 health, 🍽️ nutrition...), frequency, and an optional `HH:MM` start time.
+4. **Filter the task list** — Use the **Filter by pet** dropdown and **Pending/Completed** radio buttons to slice the list. This calls `Scheduler.filter_tasks()` live.
+5. **Complete a task** — Click **Done** next to any task. A toast confirms it, and if the task is daily or weekly, `reschedule_recurring()` automatically adds the next occurrence with its new due date.
+6. **Generate the schedule** — Click **Generate schedule**. The plan appears as a table with computed time slots, sorted by priority and trimmed to your time budget. A success banner totals the scheduled minutes, and an info banner reports any tasks that didn't fit.
+7. **Watch for conflicts** — If two tasks have overlapping start-time windows, a ⚠️ warning banner names both tasks and their time ranges and suggests moving one — shown *above* the plan so you see it before relying on the schedule.
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+Sample CLI output from `python main.py` (same logic layer, run in the terminal):
+
+```
+=== Today's Schedule for Jordan ===
+Available time: 90 min  |  Starting at 08:00
+
+  [    ] 08:00  Morning walk -- Mochi  (30 min, high priority)
+              Leash walk around the block
+  [    ] 08:30  Feeding -- Mochi  (10 min, high priority)
+              1 cup dry kibble + fresh water
+  [    ] 08:40  Medication -- Luna  (5 min, high priority)
+              Daily allergy pill hidden in a treat
+  [    ] 08:45  Training session -- Mochi  (20 min, medium priority)
+              Sit, stay, and new trick practice
+  [    ] 09:05  Brush coat -- Luna  (15 min, medium priority)
+              Prevents matting and reduces hairballs
+  [    ] 09:20  Puzzle feeder -- Luna  (10 min, low priority)
+              Fill kibble puzzle to keep Luna stimulated
+
+Total scheduled: 90 min
+
+Conflict detection demo:
+  WARNING: Conflict: 'Vet call' (Mochi, 09:10-09:25) overlaps 'Training session' (Mochi, 09:00-09:20)
+
+Recurring task rescheduling demo:
+  Before: 'Morning walk' completed=False, Mochi task count=4
+  After:  'Morning walk' completed=True
+  Rescheduled: 'Morning walk' due 2026-07-09, Mochi task count=5
+```
+
+**System architecture**: see [diagrams/uml_final.mmd](diagrams/uml_final.mmd) for the final class diagram (paste into [mermaid.live](https://mermaid.live) to render).

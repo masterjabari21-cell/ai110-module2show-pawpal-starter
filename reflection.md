@@ -49,13 +49,11 @@ The scheduler uses a **greedy first-fit** approach: it sorts all pending tasks b
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+AI was used at every phase, but with different jobs: brainstorming the class design and three core user actions in Phase 1, generating the dataclass skeleton from the UML, fleshing out the scheduling algorithms (sorting with a lambda key, `timedelta`-based recurrence, interval-overlap conflict detection), drafting the pytest suite, and wiring `st.session_state` into the Streamlit UI. The most effective feature was agent-mode editing across multiple files at once — for example, adding recurrence required coordinated changes to `Task` (new `due_date` field), `Scheduler` (`reschedule_recurring`), `main.py` (demo), and the tests in one pass. The most helpful prompts were specific and attached real files: "Based on my skeletons in pawpal_system.py, how should the Scheduler retrieve all tasks from the Owner's pets?" got a concrete answer; vague prompts like "make it better" would not have. Keeping separate chat sessions per phase (design, algorithms, testing) kept each conversation focused and prevented earlier decisions from being accidentally re-litigated.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+When asked to review the skeleton, the AI initially generated dataclass fields named `_tasks` and `_pets` to signal privacy. That suggestion was not kept as-is: in Python dataclasses, underscore-prefixed fields still show up as constructor parameters, forcing awkward calls like `Pet(_tasks=[...])`. The fix — verified by actually constructing objects in the terminal — was plain names with `init=False`. Similarly, when a knapsack-style optimizer was floated as a "smarter" alternative to the greedy scheduler, it was rejected deliberately: pet care tasks aren't interchangeable point values, and the added complexity wasn't justified. Verification throughout was empirical — every AI-generated method was exercised through `main.py` demo output and pytest before being trusted.
 
 ---
 
@@ -75,12 +73,12 @@ Confidence is about 4 out of 5. Every core behavior has at least one passing tes
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+The cleanest part of the project is the separation between the logic layer and the UI. Because `pawpal_system.py` has no Streamlit imports, the exact same `Scheduler` powers the terminal demo (`main.py`), the 15 pytest tests, and the web app — and the design survived from UML draft to final code with only additive changes. The conflict detection and recurrence features also landed working on the first test run, which suggests the earlier investment in a clear class design paid off.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+Three things for the next iteration: (1) wire `Owner.preferences` into the scheduler so "prefers morning tasks" actually influences ordering — the field exists but is decorative; (2) add data persistence (save/load to JSON) so pets and tasks survive an app restart, not just a page re-run; (3) upgrade conflict detection to also consider the scheduler's own computed time slots, not just manually entered start times.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+The biggest lesson is that the human's job in AI-assisted development is to be the architect, not the typist. The AI was excellent at producing code fast, but every design decision that mattered — greedy vs. knapsack scheduling, which constraints to prioritize, when a "more Pythonic" suggestion actually hurt readability — required human judgment about the *domain*, not the syntax. Being specific in prompts, attaching real files, and verifying every suggestion by running it (rather than trusting that it looked right) is what turned AI output into a system that actually works.
