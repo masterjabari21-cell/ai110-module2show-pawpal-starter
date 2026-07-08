@@ -44,14 +44,26 @@ pip install -r requirements.txt
 
 ## 🖥️ Sample Output
 
-Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
+Run `python main.py` to generate a daily schedule from the demo data:
 
 ```
-# e.g.:
-# Daily plan for Biscuit (Golden Retriever):
-#   08:00 — Morning walk (30 min) [priority: high]
-#   09:00 — Feeding (10 min) [priority: high]
-#   ...
+=== Today's Schedule for Jordan ===
+Available time: 90 min  |  Starting at 08:00
+
+  [    ] 08:00  Morning walk -- Mochi  (30 min, high priority)
+              Leash walk around the block
+  [    ] 08:30  Feeding -- Mochi  (10 min, high priority)
+              1 cup dry kibble + fresh water
+  [    ] 08:40  Medication -- Luna  (5 min, high priority)
+              Daily allergy pill hidden in a treat
+  [    ] 08:45  Training session -- Mochi  (20 min, medium priority)
+              Sit, stay, and new trick practice
+  [    ] 09:05  Brush coat -- Luna  (15 min, medium priority)
+              Prevents matting and reduces hairballs
+  [    ] 09:20  Puzzle feeder -- Luna  (10 min, low priority)
+              Fill kibble puzzle to keep Luna stimulated
+
+Total scheduled: 90 min
 ```
 
 ## 🧪 Testing PawPal+
@@ -67,19 +79,28 @@ pytest --cov
 Sample test output:
 
 ```
-# Paste your pytest output here
+============================= test session starts =============================
+platform win32 -- Python 3.13.1, pytest-9.1.1
+collected 4 items
+
+tests/test_pawpal.py::test_mark_complete_changes_status PASSED           [ 25%]
+tests/test_pawpal.py::test_add_task_increases_pet_task_count PASSED      [ 50%]
+tests/test_pawpal.py::test_scheduler_excludes_completed_tasks PASSED     [ 75%]
+tests/test_pawpal.py::test_scheduler_respects_available_time PASSED      [100%]
+
+============================== 4 passed in 0.03s ==============================
 ```
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Sort by priority | `Scheduler.sort_by_priority()` | Orders tasks high → medium → low before time-fitting |
+| Sort by start time | `Scheduler.sort_by_time()` | Sorts a task list by `HH:MM` start_time; untimed tasks go last |
+| Filter by time budget | `Scheduler.filter_by_time()` | Greedy first-fit: includes tasks in priority order until time runs out |
+| Filter by pet / status | `Scheduler.filter_tasks()` | Returns `(Task, Pet)` pairs filtered by pet name and/or completion flag |
+| Conflict detection | `Scheduler.detect_conflicts()` | Checks tasks with manual `start_time` for overlapping windows; returns warning strings |
+| Recurring tasks | `Scheduler.reschedule_recurring()` | Marks a task complete and adds a new copy due tomorrow (daily) or in 7 days (weekly) using `timedelta` |
 
 ## 📸 Demo Walkthrough
 
