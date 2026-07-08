@@ -63,13 +63,11 @@ The scheduler uses a **greedy first-fit** approach: it sorts all pending tasks b
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+The suite has 15 tests covering five areas: task basics (completion status, task counts, and that an invalid priority raises `ValueError`), sorting correctness (`sort_by_time` returns chronological order and puts untimed tasks last; `sort_by_priority` orders high → medium → low), recurrence logic (a completed daily task spawns a copy due tomorrow, weekly recurs in 7 days, "as-needed" does not recur), conflict detection (overlapping windows are flagged, non-overlapping ones are not), and scheduler edge cases (completed tasks excluded, time budget never exceeded, empty pets/owners don't crash). These matter because they pin down the behaviors the app's daily plan depends on — if sorting or the time budget silently broke, the schedule would still render but would be wrong, which is worse than an error.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+Confidence is about 4 out of 5. Every core behavior has at least one passing test, including the empty-input edge cases. With more time, the next tests would be: overlapping tasks for *different* pets at the same time, many same-priority tasks competing for a too-small time budget (to verify which ones win is deterministic), recurring tasks completed multiple days in a row (to check copies don't multiply incorrectly), and start times that cross midnight.
 
 ---
 
